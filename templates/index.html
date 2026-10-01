@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnlySn Studio — Threat Scanner &amp; Booter</title>
+<link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+<style>
+:root{--bg:#08050f;--panel:rgba(26,16,48,.62);--pri:#a855f7;--acc:#c084fc;--bd:rgba(168,85,247,.22);--tx:#efe6ff;--mut:#9d8cc0;
+--crit:#ff4d6d;--high:#ff8a3d;--med:#f5c542;--low:#5ad1a0;--sus:#ff6a3d}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background-color:#08050f;background-image:radial-gradient(900px 500px at 15% -10%,rgba(168,85,247,.22),transparent 60%),radial-gradient(700px 500px at 100% 100%,rgba(124,58,237,.18),transparent 60%);background-attachment:fixed;
+color:var(--tx);font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif;font-size:14px}
+button,input,select{font:inherit;color:inherit}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:12px 24px;background:rgba(8,5,15,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.2px}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800;background:linear-gradient(135deg,#7c3aed,#c084fc);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(168,85,247,.0),0 0 12px rgba(168,85,247,.35)}50%{box-shadow:0 0 0 6px rgba(168,85,247,.12),0 0 26px rgba(192,132,252,.7)}}
+.pill{padding:4px 12px;border-radius:99px;border:1px solid var(--bd);color:var(--mut);font-size:12px;display:flex;align-items:center;gap:7px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--low)}
+.pill.run i{background:var(--pri);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.tabs{display:flex;gap:6px;margin-left:auto}
+.tabbtn{background:transparent;border:1px solid transparent;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--mut);transition:.2s}
+.tabbtn:hover{color:var(--tx);transform:translateY(-1px)}
+.tabbtn.on{background:rgba(168,85,247,.16);border-color:var(--bd);color:var(--tx)}
+main{max-width:1100px;margin:0 auto;padding:22px 24px 60px}
+.warn{margin:14px 24px 0;padding:10px 14px;border:1px solid var(--high);border-radius:10px;background:rgba(255,138,61,.1);color:#ffc9a3}
+.warn[hidden]{display:none}
+.tab{display:none}
+.tab.on{display:block;animation:tabIn .35s ease both}
+.tab.leaving{display:block;opacity:0;transform:translateX(-14px);transition:.15s}
+@keyframes tabIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px;backdrop-filter:blur(6px);animation:up .45s ease both}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],input:not([type]),select{background:rgba(8,5,15,.7);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;outline:none;min-width:0}
+input:focus,select:focus,.btn:focus-visible,.tabbtn:focus-visible{border-color:var(--acc);box-shadow:0 0 0 3px rgba(168,85,247,.25);outline:none}
+select option{background:#150d28}
+.grow{flex:1;min-width:200px}
+.btn{border:1px solid var(--bd);background:rgba(168,85,247,.12);padding:9px 14px;border-radius:10px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 18px rgba(168,85,247,.4)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,#7c3aed,#a855f7);border-color:transparent}
+.btn.danger{background:rgba(255,77,109,.16);border-color:rgba(255,77,109,.5)}
+.btn.danger:hover:not(:disabled){box-shadow:0 4px 18px rgba(255,77,109,.45)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:12px}
+.bar{height:8px;border-radius:99px;background:rgba(168,85,247,.14);overflow:hidden;margin-top:12px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#c084fc);transition:width .25s}
+.ptxt{margin-top:6px;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:14px;border-left-width:3px}
+.stat b{display:block;font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat span{color:var(--mut)}
+.stat.critical{border-left-color:var(--crit)}.stat.high{border-left-color:var(--high)}.stat.medium{border-left-color:var(--med)}.stat.low{border-left-color:var(--low)}
+.item{background:rgba(20,12,38,.7);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.item.new{animation:left .35s ease both}
+@keyframes left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+.ih{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ih .nm{font-weight:600}
+.path{color:var(--mut);font-size:12px;word-break:break-all;margin:4px 0 8px}
+.badge{padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;border:1px solid}
+.badge.critical{color:var(--crit);border-color:var(--crit)}.badge.high{color:var(--high);border-color:var(--high)}
+.badge.medium{color:var(--med);border-color:var(--med)}.badge.low{color:var(--low);border-color:var(--low)}
+.badge.sus{color:var(--sus);border-color:var(--sus)}.badge.ok{color:var(--low);border-color:var(--low)}.badge.off{color:var(--mut);border-color:var(--mut)}
+.hit{font-size:12px;color:#d8c9f5;padding:4px 0;border-top:1px dashed rgba(168,85,247,.15)}
+.hit code{background:rgba(168,85,247,.16);padding:1px 6px;border-radius:5px;color:#fff;word-break:break-all}
+.sp{margin-left:auto;display:flex;gap:6px}
+.empty{text-align:center;color:var(--mut);padding:28px}
+.srow{display:grid;grid-template-columns:34px 1.1fr 2.2fr .8fr auto auto;gap:12px;align-items:start;border:1px solid var(--bd);border-left:3px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:rgba(20,12,38,.7);transition:border-color .2s;animation:left .35s ease both}
+.srow:hover{border-left-color:var(--acc)}
+.srow.sus{border-color:var(--sus);border-left-color:var(--sus)}
+.srow.sus:hover{border-left-color:var(--acc)}
+.srow.disabled{opacity:.6}
+.srow .cmd{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:break-all}
+.srow:hover .cmd{white-space:normal}
+.srow .nm{font-weight:600;word-break:break-all}
+.ico{font-size:20px;text-align:center}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pbtn{display:flex;gap:14px;align-items:center;text-align:left;padding:18px;border-radius:14px;border:1px solid var(--bd);background:var(--panel);cursor:pointer;transition:transform .18s,box-shadow .18s}
+.pbtn:hover{transform:scale(1.02);box-shadow:0 6px 26px rgba(168,85,247,.35)}
+.pbtn:active{animation:pulse 0.5s}
+.pbtn .e{font-size:28px}.pbtn b{display:block;font-size:15px}.pbtn span{color:var(--mut);font-size:12px}
+.pbtn.cancel{grid-column:1/-1;border-color:var(--crit);background:rgba(255,77,109,.14)}
+.pbtn.cancel:hover{box-shadow:0 6px 26px rgba(255,77,109,.5)}
+.backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,3,10,.6);backdrop-filter:blur(6px);animation:fade .2s both}
+.backdrop.out{animation:fade .18s reverse both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{width:min(440px,92vw);background:#150d28;border:1px solid var(--bd);border-radius:16px;padding:20px;animation:pop .35s cubic-bezier(.34,1.56,.64,1) both}
+.backdrop.out .modal{transform:scale(.95);transition:.18s}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{margin:0 0 8px}.mbody{color:#d8c9f5;margin-bottom:12px;line-height:1.5}
+.modal label{display:block;margin:8px 0;color:var(--mut);font-size:12px}.modal label input{display:block;width:100%;margin-top:4px;color:var(--tx)}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+#toasts{position:fixed;top:70px;right:18px;z-index:60;display:flex;flex-direction:column;gap:8px}
+.toast{padding:10px 14px;border-radius:10px;background:#1b1033;border:1px solid var(--bd);border-left:3px solid var(--pri);max-width:340px;animation:tin .3s ease both}
+.toast.ok{border-left-color:var(--low)}.toast.err{border-left-color:var(--crit)}.toast.out{opacity:0;transform:translateX(30px);transition:.3s}
+@keyframes tin{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.stats{grid-template-columns:1fr 1fr}.pgrid{grid-template-columns:1fr}.srow{grid-template-columns:30px 1fr}.tabs{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">O</div>OnlySn Studio</div>
+  <div class="pill" id="pill"><i></i><span id="pillTxt">Sẵn sàng</span></div>
+  <nav class="tabs">
+    <button class="tabbtn on" data-tab="scan">🔍 Quét file</button>
+    <button class="tabbtn" data-tab="startup">⚙️ Startup</button>
+    <button class="tabbtn" data-tab="power">⏻ Nguồn</button>
+  </nav>
+</header>
+<div class="warn" id="adminWarn" hidden>⚠️ Tool đang chạy không có quyền Admin: tắt/xóa startup, dọn Recycle Bin và kill process hệ thống có thể thất bại. Hãy chạy lại bằng "Run as administrator".</div>
+
+<main>
+<!-- TAB 1: QUÉT FILE -->
+<section class="tab on" id="tab-scan">
+  <div class="panel">
+    <div class="row">
+      <input id="path" class="grow" placeholder="Đường dẫn thư mục cần quét, ví dụ C:\Users\Khoi\Downloads" autocomplete="off">
+      <button class="btn primary" id="btnStart">▶ Bắt đầu</button>
+      <button class="btn danger" id="btnStop" disabled>■ Dừng</button>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="ptxt" id="ptxt">Chưa quét</div>
+  </div>
+  <div class="stats">
+    <div class="stat critical"><b data-n="critical">0</b><span>Critical</span></div>
+    <div class="stat high"><b data-n="high">0</b><span>High</span></div>
+    <div class="stat medium"><b data-n="medium">0</b><span>Medium</span></div>
+    <div class="stat low"><b data-n="low">0</b><span>Low</span></div>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <button class="btn danger" id="aAll">🗑 Xóa tất cả</button>
+      <button class="btn" id="aRecycle">♻️ Dọn Recycle Bin</button>
+      <button class="btn" id="aSmall">📉 Xóa file nhỏ</button>
+      <button class="btn" id="aKill">☠️ Kill process</button>
+      <span class="sp">
+        <select id="fmt"><option value="txt">TXT</option><option value="csv">CSV</option><option value="json">JSON</option></select>
+        <button class="btn primary" id="aExport">⬇ Xuất log</button>
+      </span>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="row" style="margin-bottom:12px">
+      <input id="fName" class="grow" placeholder="Lọc theo tên / đường dẫn…">
+      <select id="fSev"><option value="">Mọi mức độ</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+      <span id="cnt" style="color:var(--mut)"></span>
+    </div>
+    <div id="results"><div class="empty">Nhập thư mục rồi bấm Bắt đầu để quét.</div></div>
+  </div>
+</section>
+
+<!-- TAB 2: STARTUP -->
+<section class="tab" id="tab-startup">
+  <div class="panel row">
+    <button class="btn primary" id="stReload">🔄 Quét lại startup</button>
+    <select id="stFilter">
+      <option value="all">Tất cả</option><option value="sus">Chỉ nghi ngờ</option>
+      <option value="Run">Registry Run</option><option value="Startup">Thư mục Startup</option>
+      <option value="Task">Scheduled Task</option><option value="Service">Service</option>
+    </select>
+    <span id="stCount" style="color:var(--mut)"></span>
+  </div>
+  <div id="stList"><div class="empty">Bấm "Quét lại startup" để tải danh sách.</div></div>
+</section>
+
+<!-- TAB 3: NGUỒN -->
+<section class="tab" id="tab-power">
+  <div class="pgrid">
+    <button class="pbtn" data-p="restart"><div class="e">🔄</div><div><b>Khởi động lại</b><span>Restart máy, chọn thời gian chờ</span></div></button>
+    <button class="pbtn" data-p="shutdown"><div class="e">⏻</div><div><b>Tắt máy</b><span>Shutdown, chọn thời gian chờ</span></div></button>
+    <button class="pbtn" data-p="sleep"><div class="e">💤</div><div><b>Sleep</b><span>Ngủ, giữ nguyên phiên làm việc</span></div></button>
+    <button class="pbtn" data-p="hibernate"><div class="e">❄️</div><div><b>Hibernate</b><span>Lưu RAM ra đĩa rồi tắt</span></div></button>
+    <button class="pbtn" data-p="lock"><div class="e">🔒</div><div><b>Lock</b><span>Khoá màn hình ngay</span></div></button>
+    <button class="pbtn" data-p="logoff"><div class="e">🚪</div><div><b>Logoff</b><span>Đăng xuất tài khoản hiện tại</span></div></button>
+    <button class="pbtn cancel" data-p="cancel"><div class="e">❌</div><div><b>Hủy shutdown đang chờ</b><span>Dừng lệnh restart/shutdown đã hẹn giờ</span></div></button>
+  </div>
+</section>
+</main>
+<div id="toasts"></div>
+
+<script>
+/* ===== Tiện ích chung ===== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const RANK = {critical: 4, high: 3, medium: 2, low: 1};
+
+// Chống XSS: escape mọi chuỗi đưa vào innerHTML
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function api(path, body) {
+  const opt = body === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Requested-With': 'onlysn'}, body: JSON.stringify(body)};
+  const r = await fetch(path, opt);
+  try { return await r.json(); } catch { return {ok: false, stderr: 'Phản hồi không hợp lệ'}; }
+}
+const errText = r => r.stderr || r.stdout || r.error || 'Lỗi không rõ';
+
+function toast(msg, type = 'info', ms = 3500) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type; t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, ms);
+}
+
+// Popup trả Promise. buttons: [{label,value,cls}], fields: [{id,label,value}] -> trả object khi bấm nút value===true
+function popup({title, body = '', okText = 'Đồng ý', cancelText = 'Huỷ', fields = null, buttons = null, danger = false}) {
+  return new Promise(res => {
+    const bd = document.createElement('div'); bd.className = 'backdrop';
+    const fh = (fields || []).map(f => `<label>${escapeHtml(f.label)}<input data-f="${escapeHtml(f.id)}" value="${escapeHtml(f.value || '')}"></label>`).join('');
+    const btns = buttons || [{label: cancelText, value: false, cls: 'ghost'}, {label: okText, value: true, cls: danger ? 'danger' : 'primary'}];
+    bd.innerHTML = `<div class="modal" role="dialog"><h3>${escapeHtml(title)}</h3><div class="mbody">${escapeHtml(body).replace(/\n/g, '<br>')}</div>${fh}<div class="mbtns">${btns.map((b, i) => `<button class="btn ${b.cls || ''}" data-i="${i}">${escapeHtml(b.label)}</button>`).join('')}</div></div>`;
+    document.body.appendChild(bd);
+    const done = v => {
+      document.removeEventListener('keydown', onKey);
+      bd.classList.add('out'); setTimeout(() => bd.remove(), 190); res(v);
+    };
+    const pick = i => {
+      const v = btns[i].value;
+      if (v === true && fields) { const o = {}; $$('input[data-f]', bd).forEach(x => o[x.dataset.f] = x.value.trim()); return done(o); }
+      done(v);
+    };
+    const onKey = e => { if (e.key === 'Escape') done(false); if (e.key === 'Enter') { const i = btns.findIndex(b => b.value === true); if (i >= 0) pick(i); } };
+    document.addEventListener('keydown', onKey);
+    bd.addEventListener('click', e => { if (e.target === bd) done(false); const b = e.target.closest('button[data-i]'); if (b) pick(+b.dataset.i); });
+    (bd.querySelector('input') || bd.querySelector('.btn.primary, .btn.danger') || bd.querySelector('button')).focus();
+  });
+}
+
+// Đếm số mượt
+function animateNum(el, to) {
+  const from = +el.dataset.v || 0; el.dataset.v = to;
+  if (from === to) { el.textContent = to; return; }
+  const t0 = performance.now(), dur = 400;
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / dur);
+    el.textContent = Math.round(from + (to - from) * k);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+// Đổi tab có animation
+let curTab = 'scan';
+function switchTab(name) {
+  if (name === curTab) return;
+  const old = $('#tab-' + curTab), nw = $('#tab-' + name);
+  $$('.tabbtn').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  old.classList.add('leaving');
+  setTimeout(() => { old.classList.remove('on', 'leaving'); nw.classList.add('on'); }, 150);
+  curTab = name;
+  if (name === 'startup' && !startupLoaded) loadStartup();
+}
+$$('.tabbtn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+
+/* ===== Quét file ===== */
+let results = [], running = false, seen = new Set(), renderTimer = null;
+
+function setRunning(v) {
+  running = v;
+  $('#btnStart').disabled = v; $('#btnStop').disabled = !v;
+  $('#pill').classList.toggle('run', v);
+  $('#pillTxt').textContent = v ? 'Đang quét…' : 'Sẵn sàng';
+}
+function updateProgress(p) {
+  const pct = p.total ? Math.round(p.current / p.total * 100) : 0;
+  $('#fill').style.width = pct + '%';
+  $('#ptxt').textContent = p.total ? `${p.current}/${p.total} (${pct}%) — ${p.file || ''}` : 'Đang liệt kê file… ' + (p.file || '');
+}
+function updateStats() {
+  const c = {critical: 0, high: 0, medium: 0, low: 0};
+  results.forEach(r => c[r.severity]++);
+  $$('[data-n]').forEach(el => animateNum(el, c[el.dataset.n]));
+}
+function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = null; renderResults(); }, 150); }
+
+function renderResults() {
+  const q = $('#fName').value.trim().toLowerCase(), sev = $('#fSev').value;
+  let list = results.filter(r => (!sev || r.severity === sev) && (!q || r.path.toLowerCase().includes(q)));
+  list.sort((a, b) => RANK[b.severity] - RANK[a.severity] || b.hit_count - a.hit_count);
+  $('#cnt').textContent = `${list.length}/${results.length} file`;
+  if (!list.length) { $('#results').innerHTML = `<div class="empty">${results.length ? 'Không có kết quả khớp bộ lọc.' : (running ? 'Chưa thấy file nghi ngờ…' : 'Chưa có file nghi ngờ nào.')}</div>`; return; }
+  const LIM = 400;
+  $('#results').innerHTML = list.slice(0, LIM).map(r => {
+    const isNew = !seen.has(r.path); seen.add(r.path);
+    const hits = r.hits.slice(0, 8).map(h => `<div class="hit"><span class="badge ${h.severity}">${h.severity}</span> <b>${escapeHtml(h.category)}</b> — ${escapeHtml(h.desc)} · dòng ${h.line}<br><code title="${escapeHtml(h.snippet)}">${escapeHtml(h.match)}</code></div>`).join('');
+    return `<div class="item${isNew ? ' new' : ''}" data-path="${escapeHtml(r.path)}" data-name="${escapeHtml(r.name)}">
+      <div class="ih"><span class="nm">${escapeHtml(r.name)}</span><span class="badge ${r.severity}">${r.severity}</span><span style="color:var(--mut)">${r.hit_count} dấu hiệu</span>
+      <span class="sp"><button class="btn sm danger" data-act="del">Xóa</button><button class="btn sm" data-act="kill">Kill</button></span></div>
+      <div class="path">${escapeHtml(r.path)}</div>${hits}${r.hits.length > 8 ? `<div class="hit">… và ${r.hits.length - 8} dấu hiệu khác (xem trong file log)</div>` : ''}</div>`;
+  }).join('') + (list.length > LIM ? `<div class="empty">Chỉ hiển thị ${LIM} kết quả đầu. Hãy lọc hoặc xuất log để xem đủ.</div>` : '');
+}
+['fName', 'fSev'].forEach(id => $('#' + id).addEventListener('input', renderResults));
+
+$('#results').addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const it = b.closest('.item'), path = it.dataset.path, name = it.dataset.name;
+  if (b.dataset.act === 'del') {
+    if (!await popup({title: 'Xóa file?', body: path, okText: 'Xóa', danger: true})) return;
+    const r = await api('/api/clean/file', {path});
+    if (r.ok) { results = results.filter(x => x.path !== path); renderResults(); updateStats(); toast('Đã xóa file', 'ok'); }
+    else toast('Không xóa được: ' + errText(r), 'err', 5000);
+  } else {
+    if (!await popup({title: 'Kill process?', body: `Kết thúc mọi process tên "${name}"?`, okText: 'Kill', danger: true})) return;
+    const r = await api('/api/clean/kill', {name});
+    toast(r.ok ? 'Đã kill ' + name : 'Không kill được: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+  }
+});
+
+$('#btnStart').onclick = async () => {
+  const path = $('#path').value.trim();
+  if (!path) return toast('Hãy nhập đường dẫn thư mục', 'err');
+  const r = await api('/api/scan/start', {path});
+  if (!r.ok) toast(r.error || 'Không bắt đầu được', 'err');
+};
+$('#path').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnStart').click(); });
+$('#btnStop').onclick = () => api('/api/scan/cancel', {});
+
+$('#aAll').onclick = async () => {
+  if (!results.length) return toast('Chưa có file nào để xóa');
+  if (!await popup({title: 'Xóa tất cả?', body: `Xóa vĩnh viễn ${results.length} file nghi ngờ đã tìm thấy?`, okText: 'Xóa tất cả', danger: true})) return;
+  const r = await api('/api/clean/all', {});
+  const gone = new Set(r.deleted || []);
+  results = results.filter(x => !gone.has(x.path)); renderResults(); updateStats();
+  toast(`${r.stdout || ''}${r.failed && r.failed.length ? ' · ' + r.stderr : ''}`, r.ok ? 'ok' : 'err', 5000);
+};
+$('#aRecycle').onclick = async () => {
+  if (!await popup({title: 'Dọn Recycle Bin?', body: 'Xóa vĩnh viễn toàn bộ nội dung C:\\$Recycle.Bin (cần Admin).', okText: 'Dọn', danger: true})) return;
+  const r = await api('/api/clean/recycle', {});
+  toast(r.ok ? 'Đã dọn Recycle Bin' : 'Lỗi: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+};
+$('#aSmall').onclick = async () => {
+  const v = await popup({title: 'Xóa file nhỏ', body: 'Xóa đệ quy mọi file nhỏ hơn dung lượng chọn trong thư mục. Không thể hoàn tác!', fields: [{id: 'folder', label: 'Thư mục', value: $('#path').value}, {id: 'max_mb', label: 'Dung lượng tối đa (MB)', value: '1'}], okText: 'Xóa', danger: true});
+  if (!v) return;
+  if (!v.folder) return toast('Chưa nhập thư mục', 'err');
+  const r = await api('/api/clean/small', {folder: v.folder, max_mb: v.max_mb});
+  if (r.deleted) { const g = new Set(r.deleted); results = results.filter(x => !g.has(x.path)); renderResults(); updateStats(); }
+  toast(r.ok ? r.stdout : 'Lỗi: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+};
+$('#aKill').onclick = async () => {
+  const v = await popup({title: 'Kill process', body: 'Nhập tên process cần kết thúc.', fields: [{id: 'name', label: 'Tên process', value: ''}], okText: 'Kill', danger: true});
+  if (!v || !v.name) return;
+  const r = await api('/api/clean/kill', {name: v.name});
+  toast(r.ok ? 'Đã kill ' + v.name : 'Lỗi: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+};
+$('#aExport').onclick = async () => {
+  if (!results.length) return toast('Chưa có dữ liệu để xuất');
+  const r = await fetch('/api/log/export', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Requested-With': 'onlysn'}, body: JSON.stringify({format: $('#fmt').value})});
+  if (!r.ok) return toast('Xuất log thất bại', 'err');
+  const m = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = m ? m[1] : 'onlysn_report.' + $('#fmt').value;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Đã xuất log', 'ok');
+};
+
+/* SSE */
+const es = new EventSource('/api/scan/events');
+es.addEventListener('snapshot', e => {
+  const d = JSON.parse(e.data); results = d.results; seen = new Set(); setRunning(d.running);
+  if (d.target && !$('#path').value) $('#path').value = d.target;
+  updateProgress(d.progress); renderResults(); updateStats();
+});
+es.addEventListener('total', e => { const d = JSON.parse(e.data); updateProgress({current: 0, total: d.total, file: ''}); });
+es.addEventListener('progress', e => updateProgress(JSON.parse(e.data)));
+es.addEventListener('hit', e => { results.push(JSON.parse(e.data)); scheduleRender(); updateStats(); });
+es.addEventListener('done', e => {
+  const d = JSON.parse(e.data); setRunning(false); renderResults();
+  if (d.error) toast('Lỗi khi quét: ' + d.error, 'err', 6000);
+  else toast(`${d.cancelled ? 'Đã dừng' : 'Quét xong'} sau ${d.elapsed}s — ${d.hit_count} file nghi ngờ`, d.hit_count ? 'err' : 'ok', 5000);
+});
+
+/* ===== Startup ===== */
+let startupData = [], view = [], startupLoaded = false;
+const ICON = {Run: '🧬', Startup: '📁', Task: '⏰', Service: '🛠️'};
+
+async function loadStartup() {
+  $('#stReload').disabled = true; $('#stList').innerHTML = '<div class="empty">Đang quét startup… (có thể mất vài giây)</div>';
+  try {
+    const r = await api('/api/booter/startup');
+    startupData = r.entries || []; startupLoaded = true;
+    $('#stCount').textContent = `${startupData.length} entry · ${r.suspicious || 0} nghi ngờ`;
+    renderStartup(startupData);
+  } catch { toast('Không tải được startup', 'err'); }
+  $('#stReload').disabled = false;
+}
+
+function renderStartup(entries) {
+  const f = $('#stFilter').value;
+  view = entries.filter(e => f === 'all' || (f === 'sus' ? e.suspicious : e.source === f));
+  view.sort((a, b) => (b.suspicious - a.suspicious) || a.source.localeCompare(b.source) || a.name.localeCompare(b.name));
+  if (!view.length) { $('#stList').innerHTML = '<div class="empty">Không có entry nào khớp bộ lọc.</div>'; return; }
+  $('#stList').innerHTML = view.map((e, i) => `<div class="srow${e.suspicious ? ' sus' : ''}${e.enabled ? '' : ' disabled'}" title="${escapeHtml(e.suspicious ? 'Nghi ngờ: ' + e.reason : '')}" style="animation-delay:${Math.min(i, 20) * 15}ms">
+    <div class="ico" title="${escapeHtml(e.source)}">${ICON[e.source] || '•'}</div>
+    <div class="nm">${escapeHtml(e.name)}<div class="cmd">${escapeHtml(e.source)}</div></div>
+    <div class="cmd" title="${escapeHtml(e.command)}">${escapeHtml(e.command)}</div>
+    <div class="cmd">${escapeHtml(e.user)}</div>
+    <div>${e.suspicious ? '<span class="badge sus">Nghi ngờ</span>' : (e.enabled ? '<span class="badge ok">Bình thường</span>' : '<span class="badge off">Đã tắt</span>')}</div>
+    <div class="row" style="gap:6px"><button class="btn sm" data-a="toggle" data-i="${i}">${e.enabled ? 'Disable' : 'Enable'}</button><button class="btn sm danger" data-a="del" data-i="${i}">Delete</button><button class="btn sm" data-a="open" data-i="${i}" ${e.path ? '' : 'disabled'}>📂</button></div>
+  </div>`).join('');
+}
+$('#stFilter').onchange = () => renderStartup(startupData);
+$('#stReload').onclick = loadStartup;
+$('#stList').addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-a]'); if (!b) return;
+  const e = view[+b.dataset.i], body = {source: e.source, name: e.name, raw: e.raw};
+  if (b.dataset.a === 'open') {
+    const r = await api('/api/booter/startup/open', {path: e.path});
+    return r.ok ? null : toast('Không mở được: ' + errText(r), 'err');
+  }
+  const del = b.dataset.a === 'del', en = !e.enabled;
+  if (del && !await popup({title: 'Xóa entry startup?', body: `"${e.name}" (${e.source}) sẽ bị xóa hẳn.`, okText: 'Xóa', danger: true})) return;
+  const r = await api('/api/booter/startup/' + (del ? 'delete' : en ? 'enable' : 'disable'), body);
+  if (r.ok) { toast(del ? 'Đã xóa' : en ? 'Đã bật' : 'Đã tắt', 'ok'); loadStartup(); }
+  else toast('Thất bại: ' + errText(r) + ' (thử chạy bằng quyền Admin)', 'err', 6000);
+});
+
+/* ===== Nguồn ===== */
+async function confirmShutdown(type) {
+  const label = type === 'restart' ? 'Khởi động lại' : 'Tắt máy';
+  const d = await popup({title: label + '?', body: 'Lưu công việc trước khi tiếp tục. Chọn thời gian chờ:', buttons: [
+    {label: 'Huỷ', value: false, cls: 'ghost'}, {label: '0s', value: 0, cls: 'danger'}, {label: '30s', value: 30, cls: 'primary'}, {label: '60s', value: 60, cls: 'primary'}]});
+  if (typeof d !== 'number') return;
+  const r = await api('/api/booter/' + type, {delay: d});
+  toast(r.ok ? `Đã hẹn ${label.toLowerCase()} sau ${d}s` : 'Lỗi: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+}
+const ASK = {sleep: 'Đưa máy vào Sleep?', hibernate: 'Hibernate máy?', logoff: 'Đăng xuất tài khoản hiện tại? Chương trình đang mở sẽ bị đóng.'};
+$$('.pbtn').forEach(b => b.onclick = async () => {
+  const p = b.dataset.p;
+  if (p === 'restart' || p === 'shutdown') return confirmShutdown(p);
+  if (ASK[p] && !await popup({title: 'Xác nhận', body: ASK[p], okText: 'Đồng ý', danger: p === 'logoff'})) return;
+  const r = await api('/api/booter/' + p, {});
+  toast(r.ok ? 'Đã thực hiện: ' + p : 'Lỗi: ' + errText(r), r.ok ? 'ok' : 'err', 5000);
+});
+
+/* ===== Khởi tạo ===== */
+api('/api/info').then(i => { if (i && i.admin === false) $('#adminWarn').hidden = false; });
+</script>
+</body>
+</html>
